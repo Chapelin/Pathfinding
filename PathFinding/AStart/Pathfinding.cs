@@ -90,12 +90,12 @@ namespace AStart
         }
 
 
-        private static List<Node> GetAdjacents(Coordonnees c, Node[,] table)
+        public static List<Node> GetAdjacents(Coordonnees c, Node[,] table)
         {
             List<Node> list = new List<Node>();
             bool flagXMin = c.X > 0;
             bool flagXMax = c.X < table.GetLength(0) - 1;
-            bool flagYMin = c.Y < 0;
+            bool flagYMin = c.Y > 0;
             bool flagYMax = c.Y < table.GetLength(1) - 1;
             if (flagXMin)
             {
@@ -119,7 +119,7 @@ namespace AStart
 
             if (flagYMin)
                 list.Add(table[c.X, c.Y - 1]);
-            list.Add(table[c.X, c.Y]);
+           // list.Add(table[c.X, c.Y]);
             if (flagYMax)
                 list.Add(table[c.X, c.Y + 1]);
 
