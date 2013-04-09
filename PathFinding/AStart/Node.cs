@@ -47,12 +47,12 @@ namespace AStart
             get { return G+H; }
         }
 
-        public void CalculerG()
+        public void CalculerG(int horizontal, int diagonal)
         {
             if (this.Parent != null)
             {
                 var temp = this;
-                var g = this.pos.DifferenceSurDeuxAxes(this._parent.pos) ? 140 : 100; // si diagonale : 140 au depart
+                var g = this.pos.DifferenceSurDeuxAxes(this._parent.pos) ? diagonal : horizontal; // si diagonale : 140 au depart
                 while (temp.Parent != null)
                 {
                     temp = temp.Parent;
@@ -62,33 +62,45 @@ namespace AStart
             }
         }
 
-        public void CalculerH(Coordonnees cible)
+        public void CalculerH(Coordonnees cible, int horizontal, int diagonal)
         {
             int h = 0;
             var diff = (pos - cible).Abs();
-            while(diff.X>0 && diff.Y>0)
+            if (diagonal < 2 * horizontal) //si diagonal est utile
             {
-                h += 140;
-                diff -= new Coordonnees(1,1);
+                while (diff.X > 0 && diff.Y > 0)
+                {
+                    h += diagonal;
+                    diff -= new Coordonnees(1, 1);
+                }
+
+                while (diff.X + diff.Y > 0)
+                {
+                    h += horizontal;
+                    diff.X -= 1;
+
+                }
             }
-
-            while(diff.X+diff.Y>0)
+            else //sinon inutile : on compte le nombre de deplacement
             {
-                h += 100;
-                diff.X -= 1;
+                while (diff.X + diff.Y > 0)
+                {
+                    h += horizontal;
+                    diff.X -= 1;
 
+                }
             }
 
             this._H = h;
         }
 
 
-        public int SimulateCalculerG(Node parent)
+        public int SimulateCalculerG(Node parent, int horizontal, int diagonal)
         {
             if (parent != null)
             {
                 Node temp;
-                var g = this.pos.DifferenceSurDeuxAxes(parent.pos) ? 140 : 100; // si diagonale : 140 au depart
+                var g = this.pos.DifferenceSurDeuxAxes(parent.pos) ? diagonal : horizontal; // si diagonale : 140 au depart
                 temp = parent;
                 g += temp.G;
                 while (temp.Parent != null)

@@ -6,8 +6,28 @@ using CommunXnaFree.Spacialisation;
 
 namespace AStart
 {
-    public static class Pathfinding
+    public class Pathfinding
     {
+
+        private static Pathfinding _singleton;
+
+        private int vertical;
+        private int diag;
+
+        public static Pathfinding Singleton(int vertical=100, int diag=140, bool force = false)
+        {
+            if(_singleton==null || force)
+                _singleton = new Pathfinding(vertical,diag);
+            return _singleton;
+        }
+
+        private Pathfinding(int vertical, int diag)
+        {
+            this.vertical = vertical;
+            this.diag = diag;
+        }
+
+
         /// <summary>
         /// REtourne le chemin possible entre le depart et son arrivée
         /// </summary>
@@ -15,7 +35,7 @@ namespace AStart
         /// <param name="depart"></param>
         /// <param name="arrive"></param>
         /// <returns></returns>
-        public static List<Node> FindPath(int[,] tab, Coordonnees depart, Coordonnees arrive)
+        public List<Node> FindPath(int[,] tab, Coordonnees depart, Coordonnees arrive)
         {
             var tabNode = PreparerTableau(tab);
             var result = new List<Node>();
@@ -44,17 +64,17 @@ namespace AStart
                         {//on l'ajoute et on indique son parent
                             listeOuverte.Add(node);
                             node.Parent = current;
-                            node.CalculerG();
-                            node.CalculerH(arrive);
+                            node.CalculerG(this.vertical,this.diag);
+                            node.CalculerH(arrive, this.vertical,this.diag);
 
                         }
                         else if (listeOuverte.Contains(node))
                         {
-                            var newG = node.SimulateCalculerG(current);
+                            var newG = node.SimulateCalculerG(current, this.vertical,this.diag);
                             if (newG < node.G && newG > 0)
                             {
                                 node.Parent = current;
-                                node.CalculerG();
+                                node.CalculerG(this.vertical, this.diag);
                             }
                         }
                     }
@@ -69,11 +89,13 @@ namespace AStart
                 result.Add(t);
                 t = t.Parent;
             }
+            if(result.Count>0)
+                result.Add(t);
             return result;
         }
 
 
-        private static Node[,] PreparerTableau(int[,] tab)
+        private Node[,] PreparerTableau(int[,] tab)
         {
 
             int t1 = tab.GetLength(0);
@@ -90,39 +112,61 @@ namespace AStart
         }
 
 
-        public static List<Node> GetAdjacents(Coordonnees c, Node[,] table)
+        public List<Node> GetAdjacents(Coordonnees c, Node[,] table)
         {
             List<Node> list = new List<Node>();
             bool flagXMin = c.X > 0;
             bool flagXMax = c.X < table.GetLength(0) - 1;
             bool flagYMin = c.Y > 0;
             bool flagYMax = c.Y < table.GetLength(1) - 1;
+            var flagDiagoOk = this.diag < 2*this.vertical;
+            //if (flagXMin)
+            //{
+            //    if (flagYMin)
+            //        list.Add(table[c.X - 1, c.Y - 1]);
+            //    list.Add(table[c.X - 1, c.Y]);
+            //    if (flagYMax)
+            //        list.Add(table[c.X - 1, c.Y + 1]);
+
+            //}
+
+            //if (flagXMax)
+            //{
+            //    if (flagYMin)
+            //        list.Add(table[c.X + 1, c.Y - 1]);
+            //    list.Add(table[c.X + 1, c.Y]);
+            //    if (flagYMax)
+            //        list.Add(table[c.X + 1, c.Y + 1]);
+
+            //}
+
+            //if (flagYMin)
+            //    list.Add(table[c.X, c.Y - 1]);
+            //if (flagYMax)
+            //    list.Add(table[c.X, c.Y + 1]);
             if (flagXMin)
-            {
-                if (flagYMin)
-                    list.Add(table[c.X - 1, c.Y - 1]);
                 list.Add(table[c.X - 1, c.Y]);
-                if (flagYMax)
-                    list.Add(table[c.X - 1, c.Y + 1]);
-
-            }
-
             if (flagXMax)
-            {
-                if (flagYMin)
-                    list.Add(table[c.X + 1, c.Y - 1]);
                 list.Add(table[c.X + 1, c.Y]);
-                if (flagYMax)
-                    list.Add(table[c.X + 1, c.Y + 1]);
-
-            }
 
             if (flagYMin)
                 list.Add(table[c.X, c.Y - 1]);
-           // list.Add(table[c.X, c.Y]);
             if (flagYMax)
                 list.Add(table[c.X, c.Y + 1]);
+            
+            var flagUseDiago = list.Where(x => !x.Obstacle).Count() < 2; //necessité utiliser diago pour avancer
+            if(flagDiagoOk || (flagUseDiago)) //si les diago sont ok pour utiliser ou si on a pas le choix
+            {
+                if(flagXMin&&flagYMin)
+                    list.Add(table[c.X - 1, c.Y - 1]);
+                if(flagXMin&&flagYMax)
+                    list.Add(table[c.X - 1, c.Y + 1]);
 
+                if(flagXMax&&flagYMin)
+                    list.Add(table[c.X + 1, c.Y - 1]);
+                if(flagXMax&&flagYMax)
+                    list.Add(table[c.X + 1, c.Y + 1]);
+            }
 
             return list;
         }
